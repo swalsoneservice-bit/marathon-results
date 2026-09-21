@@ -15,7 +15,7 @@
             color: #333;
         }
         .container {
-            max-width: 1100px;
+            max-width: 1150px;
             margin: 0 auto;
         }
         header {
@@ -63,12 +63,13 @@
         table { 
             width: 100%; 
             border-collapse: collapse; 
-            min-width: 800px; 
+            min-width: 900px; 
         }
         th, td { 
             padding: 14px 16px; 
             text-align: left; 
             border-bottom: 1px solid #eee; 
+            vertical-align: middle;
         }
         th { 
             background-color: #d35400; 
@@ -85,11 +86,147 @@
         tr:hover { 
             background-color: #f1f5f9; 
         }
+        .btn-cert {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: background 0.2s ease;
+            white-space: nowrap;
+        }
+        .btn-cert:hover {
+            background-color: #219150;
+        }
         .no-result {
             text-align: center;
             padding: 20px;
             color: #777;
             display: none;
+        }
+
+        /* Certificate Print Layout Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #certificateView, #certificateView * {
+                visibility: visible;
+            }
+            #certificateView {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                display: block !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* Modal Background */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            overflow: auto;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 750px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+        .close-btn:hover { color: #000; }
+
+        /* Certificate Styling */
+        .cert-card {
+            border: 10px solid #d35400;
+            padding: 40px 30px;
+            text-align: center;
+            background: #fffdf9;
+            position: relative;
+        }
+        .cert-title {
+            font-size: 28px;
+            color: #d35400;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .cert-subtitle {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .cert-name {
+            font-size: 32px;
+            color: #2c3e50;
+            font-weight: bold;
+            border-bottom: 2px solid #d35400;
+            display: inline-block;
+            padding-bottom: 5px;
+            margin: 15px 0;
+        }
+        .cert-details {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .cert-box {
+            margin: 10px;
+        }
+        .cert-box span {
+            display: block;
+            font-size: 12px;
+            color: #777;
+            text-transform: uppercase;
+        }
+        .cert-box strong {
+            font-size: 18px;
+            color: #333;
+        }
+        .print-actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .btn-print-now {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-print-now:hover {
+            background-color: #d35400;
         }
     </style>
 </head>
@@ -117,6 +254,7 @@
                         <th>10Km Split</th>
                         <th>21Km Split</th>
                         <th>Duration</th>
+                        <th>Certificate</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -125,21 +263,60 @@
         </div>
     </div>
 
+    <!-- Certificate Modal -->
+    <div id="certModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            
+            <div id="certificateView" class="cert-card">
+                <div class="cert-title">Bagan Marathon 2025</div>
+                <div class="cert-subtitle">Certificate of Achievement</div>
+                <p>This is to proudly certify that</p>
+                <div class="cert-name" id="certRunnerName">Runner Name</div>
+                <p>has successfully completed the race with the following official results:</p>
+                
+                <div class="cert-details">
+                    <div class="cert-box">
+                        <span>BIB Number</span>
+                        <strong id="certBib">-</strong>
+                    </div>
+                    <div class="cert-box">
+                        <span>Category</span>
+                        <strong id="certCategory">-</strong>
+                    </div>
+                    <div class="cert-box">
+                        <span>Official Time</span>
+                        <strong id="certDuration">-</strong>
+                    </div>
+                    <div class="cert-box">
+                        <span>Overall Rank</span>
+                        <strong id="certRank">-</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="print-actions no-print">
+                <button class="btn-print-now" onclick="window.print()">🖨️ Print / Save PDF</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let allData = [];
+
         // Load and parse CSV file
         Papa.parse('results.csv', {
             download: true,
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
-                let data = results.data;
+                allData = results.data;
                 let tbody = document.getElementById('tableBody');
                 
-                if (data.length > 0) {
-                    data.forEach(row => {
+                if (allData.length > 0) {
+                    allData.forEach((row, index) => {
                         let tr = document.createElement('tr');
                         
-                        // Mapping exactly with CSV column names
                         tr.innerHTML = `
                             <td><strong>${row.Ranking || '-'}</strong></td>
                             <td>${row.BIB || '-'}</td>
@@ -149,6 +326,9 @@
                             <td>${row['10Km-Split'] || '-'}</td>
                             <td>${row['21Km-Split'] || '-'}</td>
                             <td>${row.Duration || '-'}</td>
+                            <td>
+                                <button class="btn-cert" onclick="openCertificate(${index})">📜 Print Cert</button>
+                            </td>
                         `;
                         tbody.appendChild(tr);
                     });
@@ -156,7 +336,7 @@
             }
         });
 
-        // Search Function for BIB or Name
+        // Search Function
         function searchTable() {
             let input = document.getElementById("searchInput").value.toUpperCase();
             let trs = document.getElementById("tableBody").getElementsByTagName("tr");
@@ -172,8 +352,34 @@
                 }
             }
 
-            // Toggle No Result Message
             document.getElementById("noResult").style.display = hasMatch ? "none" : "block";
+        }
+
+        // Open Certificate Modal
+        function openCertificate(index) {
+            let runner = allData[index];
+            if(!runner) return;
+
+            document.getElementById('certRunnerName').textContent = runner.Name || 'Runner';
+            document.getElementById('certBib').textContent = runner.BIB || '-';
+            document.getElementById('certCategory').textContent = runner.Categories || '-';
+            document.getElementById('certDuration').textContent = runner.Duration || '-';
+            document.getElementById('certRank').textContent = runner.Ranking || '-';
+
+            document.getElementById('certModal').style.display = 'block';
+        }
+
+        // Close Modal
+        function closeModal() {
+            document.getElementById('certModal').style.display = 'none';
+        }
+
+        // Close when clicking outside modal
+        window.onclick = function(event) {
+            let modal = document.getElementById('certModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
         }
     </script>
 </body>
