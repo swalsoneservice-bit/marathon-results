@@ -3,36 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Race Timing Results</title>
+    <title>Bagan Marathon 2025 Result Race Timing</title>
     <!-- PapaParse for reading CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f8; }
-        h1 { text-align: center; color: #333; }
-        .search-container { text-align: center; margin-bottom: 20px; }
-        input[type="text"] { width: 80%; max-width: 400px; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; }
-        .table-container { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #007bff; color: white; }
-        tr:hover { background-color: #f1f1f1; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f4f6f8; 
+            color: #333;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #d35400, #e67e22);
+            color: white;
+            padding: 25px 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            margin: 0 0 10px 0; 
+            font-size: 28px;
+        }
+        p.subtitle {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 15px;
+        }
+        .search-container { 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        input[type="text"] { 
+            width: 100%; 
+            max-width: 450px; 
+            padding: 12px 18px; 
+            font-size: 16px; 
+            border: 2px solid #e67e22; 
+            border-radius: 25px; 
+            outline: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        input[type="text"]:focus {
+            box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
+        }
+        .table-container { 
+            overflow-x: auto; 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            min-width: 800px; 
+        }
+        th, td { 
+            padding: 14px 16px; 
+            text-align: left; 
+            border-bottom: 1px solid #eee; 
+        }
+        th { 
+            background-color: #d35400; 
+            color: white; 
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        tr:hover { 
+            background-color: #f1f5f9; 
+        }
+        .no-result {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-    <h1>🏃 Race Timing Results</h1>
+    <div class="container">
+        <header>
+            <h1>🏃‍♂️ Bagan Marathon 2025 Result Race Timing</h1>
+            <p class="subtitle">Official Race Timing & Runner Results</p>
+        </header>
 
-    <div class="search-container">
-        <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="BIB သို့မဟုတ် Runner Name ဖြင့် ရှာပါ...">
-    </div>
+        <div class="search-container">
+            <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="BIB သို့မဟုတ် Runner Name ဖြင့် ရှာပါ...">
+        </div>
 
-    <div class="table-container">
-        <table id="resultsTable">
-            <thead>
-                <tr id="tableHeader"></tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+        <div class="table-container">
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Ranking</th>
+                        <th>BIB</th>
+                        <th>Name</th>
+                        <th>Gender</th>
+                        <th>Categories</th>
+                        <th>10Km Split</th>
+                        <th>21Km Split</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+            <div id="noResult" class="no-result">ရှာဖွေမှုနှင့် ကိုက်ညီသော ရလဒ် မတွေ့ရှိပါ။</div>
+        </div>
     </div>
 
     <script>
@@ -40,49 +130,50 @@
         Papa.parse('results.csv', {
             download: true,
             header: true,
+            skipEmptyLines: true,
             complete: function(results) {
                 let data = results.data;
+                let tbody = document.getElementById('tableBody');
+                
                 if (data.length > 0) {
-                    let headers = Object.keys(data[0]);
-                    let headerTr = document.getElementById('tableHeader');
-                    
-                    // Generate Headers
-                    headers.forEach(h => {
-                        let th = document.createElement('th');
-                        th.textContent = h;
-                        headerTr.appendChild(th);
-                    });
-
-                    // Generate Rows
-                    let tbody = document.getElementById('tableBody');
                     data.forEach(row => {
-                        if (Object.values(row).some(val => val.trim() !== '')) {
-                            let tr = document.createElement('tr');
-                            headers.forEach(h => {
-                                let td = document.createElement('td');
-                                td.textContent = row[h] || '';
-                                tr.appendChild(td);
-                            });
-                            tbody.appendChild(tr);
-                        }
+                        let tr = document.createElement('tr');
+                        
+                        // Mapping exactly with CSV column names
+                        tr.innerHTML = `
+                            <td><strong>${row.Ranking || '-'}</strong></td>
+                            <td>${row.BIB || '-'}</td>
+                            <td>${row.Name || '-'}</td>
+                            <td>${row.Gender || '-'}</td>
+                            <td>${row.Categories || '-'}</td>
+                            <td>${row['10Km-Split'] || '-'}</td>
+                            <td>${row['21Km-Split'] || '-'}</td>
+                            <td>${row.Duration || '-'}</td>
+                        `;
+                        tbody.appendChild(tr);
                     });
                 }
             }
         });
 
-        // Search Function
+        // Search Function for BIB or Name
         function searchTable() {
             let input = document.getElementById("searchInput").value.toUpperCase();
             let trs = document.getElementById("tableBody").getElementsByTagName("tr");
+            let hasMatch = false;
 
             for (let i = 0; i < trs.length; i++) {
                 let text = trs[i].textContent || trs[i].innerText;
                 if (text.toUpperCase().indexOf(input) > -1) {
                     trs[i].style.display = "";
+                    hasMatch = true;
                 } else {
                     trs[i].style.display = "none";
                 }
             }
+
+            // Toggle No Result Message
+            document.getElementById("noResult").style.display = hasMatch ? "none" : "block";
         }
     </script>
 </body>
