@@ -1,386 +1,281 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bagan Marathon 2025 Result Race Timing</title>
-    <!-- PapaParse for reading CSV -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 0; 
-            padding: 20px; 
-            background-color: #f4f6f8; 
-            color: #333;
-        }
-        .container {
-            max-width: 1150px;
-            margin: 0 auto;
-        }
-        header {
-            text-align: center;
-            margin-bottom: 25px;
-            background: linear-gradient(135deg, #d35400, #e67e22);
-            color: white;
-            padding: 25px 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        h1 { 
-            margin: 0 0 10px 0; 
-            font-size: 28px;
-        }
-        p.subtitle {
-            margin: 0;
-            opacity: 0.9;
-            font-size: 15px;
-        }
-        .search-container { 
-            text-align: center; 
-            margin-bottom: 20px; 
-        }
-        input[type="text"] { 
-            width: 100%; 
-            max-width: 450px; 
-            padding: 12px 18px; 
-            font-size: 16px; 
-            border: 2px solid #e67e22; 
-            border-radius: 25px; 
-            outline: none;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
-        }
-        input[type="text"]:focus {
-            box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
-        }
-        .table-container { 
-            overflow-x: auto; 
-            background: white; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-        }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            min-width: 900px; 
-        }
-        th, td { 
-            padding: 14px 16px; 
-            text-align: left; 
-            border-bottom: 1px solid #eee; 
-            vertical-align: middle;
-        }
-        th { 
-            background-color: #d35400; 
-            color: white; 
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 13px;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-        tr:nth-child(even) {
-            background-color: #fafafa;
-        }
-        tr:hover { 
-            background-color: #f1f5f9; 
-        }
-        .btn-cert {
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
-            transition: background 0.2s ease;
-            white-space: nowrap;
-        }
-        .btn-cert:hover {
-            background-color: #219150;
-        }
-        .no-result {
-            text-align: center;
-            padding: 20px;
-            color: #777;
-            display: none;
-        }
-
-        /* Certificate Print Layout Styles */
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #certificateView, #certificateView * {
-                visibility: visible;
-            }
-            #certificateView {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                display: block !important;
-            }
-            .no-print {
-                display: none !important;
-            }
-        }
-
-        /* Modal Background */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.6);
-            overflow: auto;
-        }
-        .modal-content {
-            background-color: #fff;
-            margin: 5% auto;
-            padding: 30px;
-            border-radius: 12px;
-            width: 80%;
-            max-width: 750px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            position: relative;
-        }
-        .close-btn {
-            position: absolute;
-            right: 20px;
-            top: 15px;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #aaa;
-        }
-        .close-btn:hover { color: #000; }
-
-        /* Certificate Styling */
-        .cert-card {
-            border: 10px solid #d35400;
-            padding: 40px 30px;
-            text-align: center;
-            background: #fffdf9;
-            position: relative;
-        }
-        .cert-title {
-            font-size: 28px;
-            color: #d35400;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-        .cert-subtitle {
-            font-size: 16px;
-            color: #555;
-            margin-bottom: 25px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        .cert-name {
-            font-size: 32px;
-            color: #2c3e50;
-            font-weight: bold;
-            border-bottom: 2px solid #d35400;
-            display: inline-block;
-            padding-bottom: 5px;
-            margin: 15px 0;
-        }
-        .cert-details {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
-        .cert-box {
-            margin: 10px;
-        }
-        .cert-box span {
-            display: block;
-            font-size: 12px;
-            color: #777;
-            text-transform: uppercase;
-        }
-        .cert-box strong {
-            font-size: 18px;
-            color: #333;
-        }
-        .print-actions {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .btn-print-now {
-            background-color: #e67e22;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 16px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn-print-now:hover {
-            background-color: #d35400;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#7d2f18">
+<title>Bagan Marathon Results | Race Timing</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<style>
+:root{--brick:#7d2f18;--brick2:#a74724;--gold:#e6b85c;--sand:#fff6e5;--ink:#35251d;--muted:#79675b;--paper:#fffdf8;--line:#ead9bd}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(180deg,#f6e7c8 0,#fffaf0 420px,#f8f1e5 100%);min-height:100vh}
+.hero{position:relative;overflow:hidden;padding:38px 18px 64px;text-align:center;color:#fff7e7;background:radial-gradient(ellipse at 50% 0%,#c46b36 0,#8a371d 52%,#542313 100%);border-bottom:5px solid var(--gold)}
+.hero:before{content:"";position:absolute;inset:0;opacity:.17;background-image:radial-gradient(circle at 20% 30%,#fff 0 1px,transparent 2px),radial-gradient(circle at 80% 65%,#fff 0 1px,transparent 2px);background-size:45px 45px,63px 63px}
+.temple-art{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:100px;opacity:.78;pointer-events:none}
+.hero-inner{position:relative;z-index:1;max-width:1000px;margin:auto}
+.eyebrow{text-transform:uppercase;letter-spacing:.22em;font-size:.76rem;color:#ffe2a0;font-weight:800}
+h1{font-family:Georgia,serif;font-size:clamp(2rem,5vw,3.4rem);line-height:1.08;margin:10px 0;color:#fff7e7;text-shadow:0 3px 10px #40190f}
+.subtitle{margin:10px 0 0;color:#ffe8c5;font-size:1rem}
+.wrap{max-width:1180px;margin:-24px auto 0;padding:0 16px 40px;position:relative;z-index:2}
+.panel{background:rgba(255,253,248,.97);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 32px #6d39121a;margin-bottom:22px;padding:22px}
+.panel-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 16px}
+h2{font-family:Georgia,serif;color:var(--brick);font-size:1.45rem;margin:0}
+.small{font-size:.88rem;color:var(--muted)}
+.controls{display:grid;grid-template-columns:minmax(180px,1fr) minmax(240px,2fr) auto;gap:12px}
+input,select{font:inherit;min-width:0;width:100%;border:1px solid #d7bea0;border-radius:12px;padding:13px 14px;background:#fffdf9;color:var(--ink);outline:none}
+input:focus,select:focus{border-color:var(--brick2);box-shadow:0 0 0 3px #a747241a}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:10px 14px;font-weight:750}
+.btn{background:var(--brick);color:white}.btn:hover{background:#5d2112}.btn-light{background:#f4e4c8;color:var(--brick)}
+.status{margin-top:12px;font-size:.9rem;color:var(--muted)}.status.error{color:#a32121}
+.category-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.category-title h2{font-size:1.65rem}
+.top-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.gender-card{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:white}
+.gender-head{background:#f7ecd7;padding:13px 15px;font-weight:850;color:var(--brick);display:flex;justify-content:space-between;gap:8px}
+.gender-head span{font-size:.8rem;font-weight:600;color:var(--muted)}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid #f0e6d7;font-size:.9rem;vertical-align:middle}
+th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:#fffaf1}
+tbody tr:last-child td{border-bottom:0}
+.medal{font-size:1.05rem;font-weight:900;white-space:nowrap}
+.medal-1{color:#a7770c}.medal-2{color:#6b747b}.medal-3{color:#a45e36}
+.runner-name{font-weight:750}
+.empty{padding:20px;text-align:center;color:var(--muted)}
+.search-help{margin:10px 0 0;color:var(--muted);font-size:.86rem}
+.result-count{font-size:.88rem;color:var(--muted)}
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.search-table{min-width:800px}
+.certificate-btn{background:#e9f4e9;color:#246332;padding:7px 10px;font-size:.8rem}
+footer{text-align:center;padding:8px 16px 30px;color:#8b7562;font-size:.82rem}
+footer strong{color:var(--brick)}
+.modal{display:none;position:fixed;inset:0;z-index:20;background:#1d100dcc;overflow:auto;padding:24px}
+.modal.show{display:block}
+.modal-content{max-width:820px;margin:3vh auto;background:white;border-radius:14px;padding:20px}
+.modal-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.cert-card{position:relative;text-align:center;padding:clamp(22px,5vw,54px);border:10px double var(--gold);outline:1px solid var(--brick);outline-offset:-17px;background:linear-gradient(135deg,#fffdf5,#fff4df);min-height:420px}
+.cert-card:before{content:"";position:absolute;inset:15px;border:1px solid #d9b56b;pointer-events:none}
+.cert-kicker{color:var(--brick);font-weight:850;letter-spacing:.18em;text-transform:uppercase;font-size:.8rem}
+.cert-card h2{font-size:clamp(1.7rem,4vw,2.6rem);margin:14px 0}
+.cert-name{font-family:Georgia,serif;font-size:clamp(1.6rem,4vw,2.3rem);font-weight:bold;color:var(--brick);border-bottom:2px solid var(--gold);display:inline-block;padding:0 10px 8px;margin:12px 0}
+.cert-details{display:flex;justify-content:center;gap:30px;flex-wrap:wrap;margin:26px 0}
+.cert-details span{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase}
+.cert-details strong{font-size:1.1rem}
+.seal{display:inline-flex;width:76px;height:76px;border:3px solid #a74724;border-radius:50%;align-items:center;justify-content:center;color:#a74724;font-weight:900;font-size:.72rem;transform:rotate(-12deg);margin-top:6px}
+.modal-actions{display:flex;gap:10px;justify-content:center;margin-top:16px}
+@media(max-width:720px){.controls{grid-template-columns:1fr}.top-grid{grid-template-columns:1fr}.panel{padding:15px}.hero{padding-top:30px}.wrap{padding-left:10px;padding-right:10px}.panel-heading{align-items:flex-start}th,td{padding:9px 8px}}
+@media print{body *{visibility:hidden!important}.modal,.modal *{visibility:visible!important}.modal{display:block!important;position:absolute;inset:0;padding:0;background:white}.modal-content{margin:0;max-width:none;padding:0}.modal-top,.modal-actions{display:none!important}.cert-card{min-height:95vh;border-width:12px;display:flex;flex-direction:column;justify-content:center;break-inside:avoid}}
+</style>
 </head>
 <body>
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Golden Land • Myanmar</div>
+    <h1>Bagan Marathon Results</h1>
+    <p class="subtitle">Official Race Timing &amp; Runner Results</p>
+  </div>
+  <!-- Decorative Bagan-inspired pagoda silhouettes drawn locally as SVG -->
+  <svg class="temple-art" viewBox="0 0 1400 150" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <g fill="#32170f">
+      <path d="M0 145V128h55v-10h15v-12h18v-15h9v-17l8-12 8 12v17h9v15h18v12h14v10h50v17z"/>
+      <path d="M210 145v-16h30v-12h14v-13h12V87l9-15 9 15v17h12v13h14v12h30v16z"/>
+      <path d="M430 145v-14h25v-12h12v-13h11V82l9-15 9 15v24h11v13h12v12h25v14z"/>
+      <path d="M570 145v-18h40v-13h18V96h14V68l9-14 9 14v28h14v18h18v13h40v18z"/>
+      <path d="M750 145v-18h28v-13h13v-14h12V82l8-14 8 14v18h12v14h13v13h28v18z"/>
+      <path d="M930 145v-16h38v-12h16v-14h14V84l9-16 9 16v19h14v14h16v12h38v16z"/>
+      <path d="M1120 145v-18h30v-12h14v-13h12V76l9-15 9 15v26h12v13h14v12h30v18z"/>
+      <path d="M1280 145v-16h30v-12h13v-13h12V89l8-13 8 13v15h12v13h13v12h30v16z"/>
+    </g>
+    <path d="M0 146H1400" stroke="#e6b85c" stroke-width="3"/>
+  </svg>
+</header>
 
-    <div class="container">
-        <header>
-            <h1>🏃‍♂️ Bagan Marathon 2025 Result Race Timing</h1>
-            <p class="subtitle">Official Race Timing & Runner Results</p>
-        </header>
-
-        <div class="search-container">
-            <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="BIB သို့မဟုတ် Runner Name ဖြင့် ရှာပါ...">
-        </div>
-
-        <div class="table-container">
-            <table id="resultsTable">
-                <thead>
-                    <tr>
-                        <th>Ranking</th>
-                        <th>BIB</th>
-                        <th>Name</th>
-                        <th>Gender</th>
-                        <th>Categories</th>
-                        <th>10Km Split</th>
-                        <th>21Km Split</th>
-                        <th>Duration</th>
-                        <th>Certificate</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
-            <div id="noResult" class="no-result">ရှာဖွေမှုနှင့် ကိုက်ညီသော ရလဒ် မတွေ့ရှိပါ။</div>
-        </div>
+<main class="wrap">
+  <section class="panel" aria-labelledby="searchTitle">
+    <div class="panel-heading"><h2 id="searchTitle">🔎 Find Your Result</h2><span class="small">BIB Number or Runner Name</span></div>
+    <div class="controls">
+      <select id="categoryFilter" aria-label="Choose category"><option value="all">All Categories</option></select>
+      <input id="searchInput" type="search" placeholder="Enter BIB or runner name..." autocomplete="off" aria-label="Search BIB or runner name">
+      <button id="clearSearch" class="btn-light" type="button">Clear Search</button>
     </div>
+    <p class="search-help">ပင်မစာရင်းမှာ Category အလိုက် Male / Female Top 3 ကိုသာ ပြသထားပါတယ်။ ကျန် Runner များကို BIB သို့မဟုတ် နာမည်ဖြင့် ရှာပါ။</p>
+    <div id="loadStatus" class="status" role="status">Loading results.csv…</div>
+  </section>
 
-    <!-- Certificate Modal -->
-    <div id="certModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
-            
-            <div id="certificateView" class="cert-card">
-                <div class="cert-title">Bagan Marathon 2025</div>
-                <div class="cert-subtitle">Certificate of Achievement</div>
-                <p>This is to proudly certify that</p>
-                <div class="cert-name" id="certRunnerName">Runner Name</div>
-                <p>has successfully completed the race with the following official results:</p>
-                
-                <div class="cert-details">
-                    <div class="cert-box">
-                        <span>BIB Number</span>
-                        <strong id="certBib">-</strong>
-                    </div>
-                    <div class="cert-box">
-                        <span>Category</span>
-                        <strong id="certCategory">-</strong>
-                    </div>
-                    <div class="cert-box">
-                        <span>Official Time</span>
-                        <strong id="certDuration">-</strong>
-                    </div>
-                    <div class="cert-box">
-                        <span>Overall Rank</span>
-                        <strong id="certRank">-</strong>
-                    </div>
-                </div>
-            </div>
+  <section id="topSection" class="panel">
+    <div class="category-title"><h2>🏆 Category Top 3</h2><span class="small">Male Top 3 • Female Top 3</span></div>
+    <div id="topResults"><div class="empty">Results ကို ဖတ်နေပါတယ်…</div></div>
+  </section>
 
-            <div class="print-actions no-print">
-                <button class="btn-print-now" onclick="window.print()">🖨️ Print / Save PDF</button>
-            </div>
-        </div>
+  <section id="searchSection" class="panel">
+    <div class="panel-heading"><h2>Runner Search Results</h2><span id="resultCount" class="result-count">Search to find any runner</span></div>
+    <div id="searchResults" class="empty">BIB သို့မဟုတ် Runner Name ရိုက်ထည့်ပြီး ရှာပါ။</div>
+  </section>
+</main>
+<footer><strong>Bagan Marathon Race Timing</strong><br>Inspired by the pagodas of ancient Bagan, Myanmar<br><span style="display:inline-block;margin-top:10px">&copy; <span id="copyrightYear">2026</span> <strong>Swal-Sone-Service</strong>. All Rights Reserved.</span></footer>
+
+<div class="modal" id="certModal" role="dialog" aria-modal="true" aria-label="Runner certificate">
+  <div class="modal-content">
+    <div class="modal-top"><strong>Certificate Preview</strong><button id="closeModal" class="btn-light" type="button">✕ Close</button></div>
+    <div class="cert-card">
+      <div class="cert-kicker">Golden Land • Bagan, Myanmar</div>
+      <h2>Bagan Marathon</h2>
+      <div class="cert-kicker">Certificate of Achievement</div>
+      <p>This is to proudly certify that</p>
+      <div id="certRunnerName" class="cert-name">Runner Name</div>
+      <p>has successfully completed the race with the following result:</p>
+      <div class="cert-details">
+        <div><span>BIB Number</span><strong id="certBib">-</strong></div>
+        <div><span>Category</span><strong id="certCategory">-</strong></div>
+        <div><span>Official Time</span><strong id="certDuration">-</strong></div>
+        <div><span>Overall Rank</span><strong id="certRank">-</strong></div>
+      </div>
+      <div class="seal">BAGAN<br>MARATHON</div>
     </div>
+    <div class="modal-actions"><button id="printCert" class="btn" type="button">🖨 Print / Save PDF</button></div>
+  </div>
+</div>
 
-    <script>
-        let allData = [];
+<script>
+(() => {
+  'use strict';
+  let allData = [];
+  const $ = id => document.getElementById(id);
+  const clean = value => String(value ?? '').trim();
+  const escapeHTML = value => clean(value).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[ch]);
+  const normalized = value => clean(value).toLocaleLowerCase();
+  const field = (row, names) => {
+    for (const name of names) {
+      const key = Object.keys(row || {}).find(k => normalized(k).replace(/[\s_-]/g,'') === normalized(name).replace(/[\s_-]/g,''));
+      if (key && clean(row[key]) !== '') return clean(row[key]);
+    }
+    return '';
+  };
+  const bib = r => field(r,['BIB','Bib Number','BibNo']);
+  const name = r => field(r,['Name','Runner Name','Full Name']);
+  const gender = r => {
+    const g = normalized(field(r,['Gender','Sex']));
+    if (['m','male','man','men','အမျိုးသား'].includes(g)) return 'Male';
+    if (['f','female','woman','women','အမျိုးသမီး'].includes(g)) return 'Female';
+    return field(r,['Gender','Sex']) || 'Unknown';
+  };
+  const category = r => field(r,['Categories','Category','Race Category','Distance']) || 'Uncategorised';
+  const duration = r => field(r,['Duration','Time','Finish Time','Chip Time','Net Time']);
+  const rankText = r => field(r,['Ranking','Rank','Overall Rank','OverallRanking']);
+  const rankNumber = r => {
+    const n = Number(rankText(r).replace(/[^\d.]/g,''));
+    return Number.isFinite(n) && n > 0 ? n : Infinity;
+  };
+  const timeToSeconds = value => {
+    const v = clean(value);
+    if (!v) return Infinity;
+    if (/^\d+(\.\d+)?$/.test(v)) return Number(v);
+    const parts = v.split(':').map(Number);
+    if (parts.some(n => !Number.isFinite(n))) return Infinity;
+    return parts.reduce((acc,n) => acc*60+n,0);
+  };
+  const sortedRows = rows => [...rows].sort((a,b) => {
+    const ar=rankNumber(a), br=rankNumber(b);
+    if (ar !== br) return ar-br;
+    const at=timeToSeconds(duration(a)), bt=timeToSeconds(duration(b));
+    if (at !== bt) return at-bt;
+    return name(a).localeCompare(name(b));
+  });
+  const categoryList = () => [...new Set(allData.map(category))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'}));
+  const rankFor = r => rankText(r) || '-';
+  const medal = n => n===1?'🥇':n===2?'🥈':'🥉';
+  const status = (message,error=false) => { $('loadStatus').textContent=message; $('loadStatus').className='status'+(error?' error':''); };
 
-        // Load and parse CSV file
-        Papa.parse('results.csv', {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-                allData = results.data;
-                let tbody = document.getElementById('tableBody');
-                
-                if (allData.length > 0) {
-                    allData.forEach((row, index) => {
-                        let tr = document.createElement('tr');
-                        
-                        tr.innerHTML = `
-                            <td><strong>${row.Ranking || '-'}</strong></td>
-                            <td>${row.BIB || '-'}</td>
-                            <td>${row.Name || '-'}</td>
-                            <td>${row.Gender || '-'}</td>
-                            <td>${row.Categories || '-'}</td>
-                            <td>${row['10Km-Split'] || '-'}</td>
-                            <td>${row['21Km-Split'] || '-'}</td>
-                            <td>${row.Duration || '-'}</td>
-                            <td>
-                                <button class="btn-cert" onclick="openCertificate(${index})">📜 Print Cert</button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                }
-            }
-        });
+  function renderTop() {
+    const selected = $('categoryFilter').value;
+    const cats = selected === 'all' ? categoryList() : [selected];
+    if (!cats.length) { $('topResults').innerHTML='<div class="empty">No result data found.</div>'; return; }
+    $('topResults').innerHTML = cats.map(cat => {
+      const inCat = allData.filter(r => category(r) === cat);
+      const groups = ['Male','Female'].map(g => {
+        const top = sortedRows(inCat.filter(r => gender(r) === g)).slice(0,3);
+        const rows = top.length ? top.map((r,i)=>`<tr>
+          <td class="medal medal-${i+1}">${medal(i+1)} ${i+1}</td>
+          <td>${escapeHTML(bib(r)||'-')}</td><td class="runner-name">${escapeHTML(name(r)||'-')}</td>
+          <td>${escapeHTML(duration(r)||'-')}</td><td>${escapeHTML(rankFor(r))}</td>
+          <td><button class="certificate-btn" data-cert="${allData.indexOf(r)}" type="button">Certificate</button></td>
+        </tr>`).join('') : '<tr><td colspan="6" class="empty">No runners in this group.</td></tr>';
+        return `<div class="gender-card"><div class="gender-head">${g}<span>Top 3</span></div>
+          <div class="table-scroll"><table><thead><tr><th>Place</th><th>BIB</th><th>Runner</th><th>Time</th><th>Rank</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+      }).join('');
+      return `<div class="category-block" style="margin-bottom:22px"><div class="category-title"><h2>${escapeHTML(cat)}</h2><span class="small">${inCat.length} runner(s)</span></div><div class="top-grid">${groups}</div></div>`;
+    }).join('');
+  }
 
-        // Search Function
-        function searchTable() {
-            let input = document.getElementById("searchInput").value.toUpperCase();
-            let trs = document.getElementById("tableBody").getElementsByTagName("tr");
-            let hasMatch = false;
+  function renderSearch() {
+    const query = normalized($('searchInput').value);
+    const cat = $('categoryFilter').value;
+    if (!query) {
+      $('resultCount').textContent='Search to find any runner';
+      $('searchResults').className='empty';
+      $('searchResults').textContent='BIB သို့မဟုတ် Runner Name ရိုက်ထည့်ပြီး ရှာပါ။';
+      return;
+    }
+    const matches = allData.filter(r => (cat==='all'||category(r)===cat) &&
+      (normalized(bib(r)).includes(query)||normalized(name(r)).includes(query)));
+    $('resultCount').textContent = `${matches.length} runner(s) found`;
+    if (!matches.length) {
+      $('searchResults').className='empty';
+      $('searchResults').textContent='ရှာဖွေမှုနှင့် ကိုက်ညီသော Runner မတွေ့ရှိပါ။ BIB / Name ကို ပြန်စစ်ပါ။';
+      return;
+    }
+    $('searchResults').className='';
+    $('searchResults').innerHTML=`<div class="table-scroll"><table class="search-table"><thead><tr>
+      <th>Rank</th><th>BIB</th><th>Runner Name</th><th>Gender</th><th>Category</th><th>10Km Split</th><th>21Km Split</th><th>Duration</th><th>Certificate</th>
+      </tr></thead><tbody>${matches.map(r=>`<tr>
+        <td>${escapeHTML(rankFor(r))}</td><td>${escapeHTML(bib(r)||'-')}</td><td class="runner-name">${escapeHTML(name(r)||'-')}</td>
+        <td>${escapeHTML(gender(r))}</td><td>${escapeHTML(category(r))}</td>
+        <td>${escapeHTML(field(r,['10Km-Split','10Km Split','10K Split'])||'-')}</td>
+        <td>${escapeHTML(field(r,['21Km-Split','21Km Split','21K Split'])||'-')}</td>
+        <td>${escapeHTML(duration(r)||'-')}</td><td><button class="certificate-btn" data-cert="${allData.indexOf(r)}" type="button">Print Cert</button></td>
+      </tr>`).join('')}</tbody></table></div>`;
+  }
 
-            for (let i = 0; i < trs.length; i++) {
-                let text = trs[i].textContent || trs[i].innerText;
-                if (text.toUpperCase().indexOf(input) > -1) {
-                    trs[i].style.display = "";
-                    hasMatch = true;
-                } else {
-                    trs[i].style.display = "none";
-                }
-            }
+  function openCertificate(index) {
+    const r=allData[index]; if(!r) return;
+    $('certRunnerName').textContent=name(r)||'Runner';
+    $('certBib').textContent=bib(r)||'-';
+    $('certCategory').textContent=category(r);
+    $('certDuration').textContent=duration(r)||'-';
+    $('certRank').textContent=rankFor(r);
+    $('certModal').classList.add('show');
+  }
+  function closeCertificate() { $('certModal').classList.remove('show'); }
+  document.addEventListener('click', e => {
+    const btn=e.target.closest('[data-cert]');
+    if(btn) openCertificate(Number(btn.getAttribute('data-cert')));
+  });
+  $('categoryFilter').addEventListener('change',()=>{renderTop();renderSearch();});
+  $('searchInput').addEventListener('input',renderSearch);
+  $('clearSearch').addEventListener('click',()=>{$('searchInput').value='';$('categoryFilter').value='all';renderTop();renderSearch();$('searchInput').focus();});
+  $('closeModal').addEventListener('click',closeCertificate);
+  $('printCert').addEventListener('click',()=>window.print());
+  $('certModal').addEventListener('click',e=>{if(e.target===$('certModal'))closeCertificate();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCertificate();});
 
-            document.getElementById("noResult").style.display = hasMatch ? "none" : "block";
-        }
-
-        // Open Certificate Modal
-        function openCertificate(index) {
-            let runner = allData[index];
-            if(!runner) return;
-
-            document.getElementById('certRunnerName').textContent = runner.Name || 'Runner';
-            document.getElementById('certBib').textContent = runner.BIB || '-';
-            document.getElementById('certCategory').textContent = runner.Categories || '-';
-            document.getElementById('certDuration').textContent = runner.Duration || '-';
-            document.getElementById('certRank').textContent = runner.Ranking || '-';
-
-            document.getElementById('certModal').style.display = 'block';
-        }
-
-        // Close Modal
-        function closeModal() {
-            document.getElementById('certModal').style.display = 'none';
-        }
-
-        // Close when clicking outside modal
-        window.onclick = function(event) {
-            let modal = document.getElementById('certModal');
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-    </script>
+  $('copyrightYear').textContent = new Date().getFullYear();
+  if (!window.Papa) { status('CSV parser failed to load. Check internet access and reload.',true); return; }
+  Papa.parse('results.csv', {
+    download:true, header:true, skipEmptyLines:true,
+    complete: results => {
+      allData=(results.data||[]).filter(r=>Object.values(r).some(v=>clean(v)));
+      if (results.errors && results.errors.length) console.warn('CSV parsing warnings:',results.errors);
+      if (!allData.length) { status('No data found in results.csv. Please check the CSV file.',true); renderTop(); return; }
+      const select=$('categoryFilter');
+      categoryList().forEach(cat=>{const option=document.createElement('option');option.value=cat;option.textContent=cat;select.appendChild(option);});
+      renderTop(); renderSearch();
+      status(`Loaded ${allData.length} runners from results.csv.`);
+    },
+    error: err => { status('Unable to load results.csv. Ensure it is in the same folder as index.html and the filename is correct.',true); console.error(err); }
+  });
+})();
+</script>
 </body>
 </html>
